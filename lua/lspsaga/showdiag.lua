@@ -127,7 +127,7 @@ function sd:create_win(opt, content)
   vim.wo[self.winid].breakindentopt = 'shift:2,sbr'
   vim.wo[self.winid].linebreak = true
 
-  api.nvim_win_set_cursor(self.winid, { 2, 3 })
+  api.nvim_win_set_cursor(self.winid, { 1, 1 })
   for _, key in ipairs(diag_conf.keys.quit_in_show) do
     nvim_buf_set_keymap(self.bufnr, 'n', key, '', {
       noremap = true,
@@ -202,8 +202,8 @@ function sd:show(opt)
       item.winline = line_count
       content[#content + 1] = text
     end
-    api.nvim_buf_set_lines(self.bufnr, line_count, line_count + 1, false, { '' })
-    line_count = line_count + 1
+    -- api.nvim_buf_set_lines(self.bufnr, line_count, line_count + 1, false, { '' })
+    -- line_count = line_count + 1
   end
 
   vim.bo[self.bufnr].modifiable = false
