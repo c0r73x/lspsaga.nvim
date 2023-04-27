@@ -175,64 +175,19 @@ function sd:show(opt)
   local line_count = 0
   local content = {}
   local curbuf = api.nvim_get_current_buf()
-  local icon_data = libs.icon_from_devicon(vim.bo[curbuf].filetype)
+  -- local icon_data = libs.icon_from_devicon(vim.bo[curbuf].filetype)
   self.bufnr = api.nvim_create_buf(false, false)
   vim.bo[self.bufnr].buftype = 'nofile'
 
   local titlehi = {}
   for bufnr, items in pairs(opt.entrys) do
-    ---@diagnostic disable-next-line: param-type-mismatch
-    local fname = fn.fnamemodify(api.nvim_buf_get_name(tonumber(bufnr)), ':t')
-    local counts = diag:get_diag_counts(items.diags)
-    local text = ui.collapse .. ' ' .. icon_data[1] .. fname .. ' Bufnr[[' .. bufnr .. ']]'
-
-    local diaghi = {}
-    for i, v in ipairs(counts) do
-      local sign = diag:get_diagnostic_sign(i)
-      if v > 0 then
-        local start = #text
-        text = text .. ' ' .. sign .. v
-        diaghi[#diaghi + 1] = {
-          'Diagnostic' .. diag:get_diag_type(i),
-          start,
-          #text,
-        }
-      end
-    end
-
-    content[#content + 1] = text
-    api.nvim_buf_set_lines(self.bufnr, line_count, line_count + 1, false, { text })
-    line_count = line_count + 1
-    titlehi[tostring(line_count - 1)] = {
-      { 'SagaCollapse', 0, #ui.collapse },
-      icon_data[2] and {
-        icon_data[2],
-        #ui.collapse + 1,
-        #ui.collapse + 1 + #icon_data[1],
-      } or nil,
-      {
-        'DiagnosticFname',
-        #ui.collapse + 1 + (icon_data[2] and #icon_data[1] or 0),
-        #ui.collapse + 1 + (icon_data[2] and #icon_data[1] or 0) + #fname,
-      },
-      {
-        'DiagnosticBufnr',
-        #ui.collapse + 2 + (icon_data[2] and #icon_data[1] or 0) + #fname,
-        #ui.collapse + 14 + (icon_data[2] and #icon_data[1] or 0) + #fname,
-      },
-      unpack(diaghi),
-    }
-
-    for _, v in ipairs(titlehi[tostring(line_count - 1)]) do
-      nvim_buf_add_highlight(self.bufnr, 0, v[1], line_count - 1, v[2], v[3])
-    end
-
     items.expand = true
     for i, item in ipairs(items.diags) do
       if item.message:find('\n') then
         item.message = item.message:gsub('\n', '')
       end
-      text = indent .. item.message
+      sign = ui.signs[item.severity] or ui.signs[4]
+      text = sign .. " " .. item.message
       api.nvim_buf_set_lines(self.bufnr, line_count, line_count + 1, false, { text })
       line_count = line_count + 1
       nvim_buf_add_highlight(
@@ -241,18 +196,11 @@ function sd:show(opt)
         diag_conf.text_hl_follow and 'Diagnostic' .. diag:get_diag_type(item.severity)
           or 'DiagnosticText',
         line_count - 1,
-        3,
+        0,
         -1
       )
       item.winline = line_count
       content[#content + 1] = text
-      nvim_buf_set_extmark(self.bufnr, ns, line_count - 1, 0, {
-        virt_text = {
-          { i == #items.diags and ui.lines[1] or ui.lines[2], 'FinderLines' },
-          { ui.lines[4]:rep(2), 'FinderLines' },
-        },
-        virt_text_pos = 'overlay',
-      })
     end
     api.nvim_buf_set_lines(self.bufnr, line_count, line_count + 1, false, { '' })
     line_count = line_count + 1
@@ -264,61 +212,6 @@ function sd:show(opt)
   api.nvim_set_hl(ns, 'NonText', {
     link = 'FinderLines',
   })
-
-  local function expand_or_collapse(text)
-    local change = text:find(ui.expand) and { ui.expand, ui.collapse } or { ui.collapse, ui.expand }
-    text = text:gsub(change[1], change[2])
-    local curline = api.nvim_win_get_cursor(self.winid)[1]
-    vim.bo[self.bufnr].modifiable = true
-    local bufnr = text:match('%[%[(.+)%]%]')
-    local data = opt.entrys[tostring(bufnr)]
-    local hi = titlehi[tostring(curline - 1)]
-    if data.expand then
-      api.nvim_buf_clear_namespace(self.bufnr, ns, curline - 1, curline + #data.diags)
-      api.nvim_buf_set_lines(self.bufnr, curline - 1, curline + #data.diags, false, { text })
-      for _, v in ipairs(hi) do
-        nvim_buf_add_highlight(self.bufnr, 0, v[1], curline - 1, v[2], v[3])
-      end
-      for _, v in ipairs(data.diags) do
-        v.winline = -1
-      end
-      change_winline(function(item)
-        return item.winline > curline + #data.diags
-      end, -#data.diags, opt.entrys)
-      data.expand = false
-    else
-      local lines = {}
-      vim.tbl_map(function(k)
-        lines[#lines + 1] = indent .. k.message
-      end, data.diags)
-      api.nvim_buf_set_lines(self.bufnr, curline - 1, curline, false, { text, unpack(lines) })
-      for _, v in ipairs(hi) do
-        nvim_buf_add_highlight(self.bufnr, 0, v[1], curline - 1, v[2], v[3])
-      end
-
-      for i, v in ipairs(data.diags) do
-        v.winline = curline + i
-        nvim_buf_add_highlight(
-          self.bufnr,
-          0,
-          diag_conf.text_hl_follow and 'Diagnostic' .. diag:get_diag_type(v.severity)
-            or 'DiagnosticText',
-          v.winline - 1,
-          3,
-          -1
-        )
-        nvim_buf_set_extmark(self.bufnr, ns, curline + i - 1, 0, {
-          virt_text = {
-            { i == #data.diags and ui.lines[1] or ui.lines[2], 'FinderLines' },
-            { ui.lines[4]:rep(2), 'FinderLines' },
-          },
-          virt_text_pos = 'overlay',
-        })
-      end
-      data.expand = true
-    end
-    vim.bo[self.bufnr].modifiable = false
-  end
 
   nvim_buf_set_keymap(self.bufnr, 'n', diag_conf.keys.expand_or_jump, '', {
     nowait = true,
