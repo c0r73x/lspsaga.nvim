@@ -187,7 +187,8 @@ function sd:show(opt)
         item.message = item.message:gsub('\n', '')
       end
       sign = ui.signs[item.severity] or ui.signs[4]
-      text = sign .. " " .. item.message
+      text = sign .. " " .. item.message .. " [[" .. item.code .. "]]" .. " (" .. item.source .. ")"
+      print(vim.inspect(item))
       api.nvim_buf_set_lines(self.bufnr, line_count, line_count + 1, false, { text })
       line_count = line_count + 1
       nvim_buf_add_highlight(
