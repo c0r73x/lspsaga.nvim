@@ -191,7 +191,9 @@ function sd:show(opt)
       if item.code then
         text = text .. " [[" .. item.code .. "]]"
       end
-      text = text .. " (" .. item.source .. ")"
+      if item.source then
+          text = text .. " (" .. item.source .. ")"
+      end
       api.nvim_buf_set_lines(self.bufnr, line_count, line_count + 1, false, { text })
       line_count = line_count + 1
       nvim_buf_add_highlight(
