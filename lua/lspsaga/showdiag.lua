@@ -67,7 +67,7 @@ function sd:create_win(opt, content)
   local max_width = math.floor(vim.o.columns * diag_conf.max_show_width)
   local float_opt = {
     width = max_len < max_width and max_len or max_width,
-    height = #content + increase > max_height and max_height or #content + increase,
+    height = #content > max_height and max_height or #content,
     no_size_override = true,
   }
 

@@ -343,7 +343,7 @@ function diag:render_diagnostic_window(entry, option)
     relative = 'cursor',
     style = 'minimal',
     width = max_width,
-    height = #content + increase,
+    height = #content,
     no_size_override = true,
     focusable = true,
   }
