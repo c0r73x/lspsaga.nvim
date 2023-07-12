@@ -184,7 +184,7 @@ function sd:show(opt)
     items.expand = true
     for i, item in ipairs(items.diags) do
       if item.message:find('\n') then
-        item.message = item.message:gsub('\n', ', ')
+        item.message = item.message:gsub('\n', ' '):gsub('%s+', ' '):gsub(' $', '')
       end
       sign = ui.signs[item.severity] or ui.signs[4]
       text = sign .. " " .. item.message
