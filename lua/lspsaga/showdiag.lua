@@ -187,12 +187,13 @@ function sd:show(opt)
         item.message = item.message:gsub('\n', ' '):gsub('%s+', ' '):gsub(' $', '')
       end
       sign = ui.signs[item.severity] or ui.signs[4]
-      text = sign .. " " .. item.message
+      orig_text = sign .. " " .. item.message
+      text = orig_text
       if item.code then
-        text = text .. " [[" .. item.code .. "]]"
+        text = text .. " " .. item.code
       end
       if item.source then
-          text = text .. " (" .. item.source .. ")"
+        text = text .. " (" .. item.source .. ")"
       end
       api.nvim_buf_set_lines(self.bufnr, line_count, line_count + 1, false, { text })
       line_count = line_count + 1
@@ -203,6 +204,14 @@ function sd:show(opt)
           or 'DiagnosticText',
         line_count - 1,
         0,
+        #orig_text
+      )
+      nvim_buf_add_highlight(
+        self.bufnr,
+        0,
+        'Comment',
+        line_count - 1,
+        #orig_text,
         -1
       )
       item.winline = line_count
