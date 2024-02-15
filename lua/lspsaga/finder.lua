@@ -724,7 +724,7 @@ local function create_preview_window(finder_winid)
   }
 
   local winconfig = api.nvim_win_get_config(finder_winid)
-  opts.row = winconfig.row[false]
+  opts.row = winconfig.row
   opts.height = winconfig.height
 
   local border_side = {}
@@ -732,19 +732,19 @@ local function create_preview_window(finder_winid)
   local bottom = window.combine_char()['bottom'][config.ui.border]
 
   --in right
-  if vim.o.columns - winconfig.col[false] - winconfig.width >= config.finder.min_width then
+  if vim.o.columns - winconfig.col - winconfig.width >= config.finder.min_width then
     local adjust = config.ui.border == 'shadow' and -2 or 2
-    opts.col = winconfig.col[false] + winconfig.width + adjust
+    opts.col = winconfig.col + winconfig.width + adjust
     opts.width = vim.o.columns - opts.col - 2
     border_side = {
       ['lefttop'] = top,
       ['leftbottom'] = bottom,
     }
   --in left
-  elseif winconfig.col[false] >= config.finder.min_width then
-    opts.width = math.floor(winconfig.col[false] * 0.8)
+  elseif winconfig.col >= config.finder.min_width then
+    opts.width = math.floor(winconfig.col * 0.8)
     local adjust = config.ui.border == 'shadow' and -2 or 0
-    opts.col = winconfig.col[false] - opts.width - adjust
+    opts.col = winconfig.col - opts.width - adjust
     border_side = {
       ['righttop'] = top,
       ['rightbottom'] = bottom,
