@@ -449,7 +449,7 @@ function diag:move_cursor(entry)
     vim.cmd('normal! zv')
   end)
 
-  self:render_diagnostic_window(entry)
+  -- self:render_diagnostic_window(entry)
 end
 
 function diag:goto_next(opts)
